@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "OmnifinNative (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "OmnifinNative (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
