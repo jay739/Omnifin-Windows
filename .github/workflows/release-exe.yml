@@ -1,4 +1,4 @@
-name: Release Windows EXE
+name: Release Windows MSIX
 
 on:
   push:
@@ -27,33 +27,39 @@ jobs:
       - name: Validate formatting and build
         run: >
           dotnet format .\OmnifinNative\OmnifinNative.csproj --verify-no-changes --no-restore
-          && dotnet build .\OmnifinNative\OmnifinNative.csproj -c Release -r win-x64 --no-restore -warnaserror /p:PublishReadyToRun=false
+          && dotnet build .\OmnifinNative\OmnifinNative.csproj -c Release -r win-x64 --no-restore -warnaserror /p:PublishReadyToRun=false /p:DebugType=None /p:DebugSymbols=false
 
-      - name: Publish Windows x64 executable
+      - name: Build MSIX package
         run: >
-          dotnet publish .\OmnifinNative\OmnifinNative.csproj
+          dotnet build .\OmnifinNative\OmnifinNative.csproj
           -c Release
           -r win-x64
-          --self-contained true
+          --no-restore
           /p:PublishReadyToRun=false
+          /p:WindowsPackageType=MSIX
+          /p:GenerateAppxPackageOnBuild=true
+          /p:AppxPackageSigningEnabled=false
+          /p:DebugType=None
+          /p:DebugSymbols=false
           /p:PublishTrimmed=false
-          -o .\artifacts\publish
 
-      - name: Package publish output
+      - name: Stage MSIX package
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path .\artifacts | Out-Null
-          Compress-Archive -Path .\artifacts\publish\* -DestinationPath .\artifacts\OmnifinNative-win-x64.zip -Force
+          $package = Get-ChildItem .\AppPackages -Recurse -Filter 'OmnifinNative_*.msix' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $package) { throw 'MSIX package was not produced.' }
+          Copy-Item $package.FullName .\artifacts\OmnifinNative-win-x64.msix -Force
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: OmnifinNative-win-x64
-          path: .\artifacts\OmnifinNative-win-x64.zip
+          name: OmnifinNative-win-x64-msix
+          path: .\artifacts\OmnifinNative-win-x64.msix
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          files: .\artifacts\OmnifinNative-win-x64.zip
+          files: .\artifacts\OmnifinNative-win-x64.msix

@@ -29,9 +29,9 @@ If you add new settings, keep them user-provided at runtime or store them locall
 The repository includes two GitHub Actions workflows:
 
 - A validation workflow on `master` pushes that checks formatting and builds the app.
-- A release workflow that runs only when you push a tag that starts with `v` and publishes a GitHub Release asset.
+- A release workflow that runs only when you push a tag that starts with `v` and publishes a GitHub Release MSIX asset.
 
-If you push a tag that starts with `v` such as `v1.0.0`, the release workflow runs formatting and build checks, then creates a GitHub Release and attaches the zip asset to it.
+If you push a tag that starts with `v` such as `v1.0.0`, the release workflow runs formatting and build checks, then creates a GitHub Release and attaches the `.msix` installer asset to it.
 
 ## Release versioning
 
@@ -41,7 +41,7 @@ Use semantic version tags like:
 - `v1.0.1`
 - `v2.0.0`
 
-Pushing one of those tags triggers the release workflow, and the resulting zip is available from the GitHub Release assets.
+Pushing one of those tags triggers the release workflow, and the resulting MSIX installer is available from the GitHub Release assets.
 
 To run it, open the Actions tab in GitHub and start the workflow manually, or push to the default branch if you want it to run automatically.
 
