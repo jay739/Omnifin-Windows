@@ -31,7 +31,7 @@ jobs:
         run: dotnet format .\OmnifinNative\OmnifinNative.csproj --verify-no-changes --no-restore
 
       - name: Build project
-        run: dotnet build .\OmnifinNative\OmnifinNative.csproj -c Release --no-restore
+        run: dotnet build .\OmnifinNative\OmnifinNative.csproj -c Release --no-restore -warnaserror
 
   release:
     needs: validate
