@@ -31,6 +31,15 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
         return await SendAsync<TokenResponse>(request, cancellationToken);
     }
 
+    public async Task<TokenResponse> LoginUserAsync(string username, string password, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/my/token/login");
+        var basicAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", basicAuth);
+
+        return await SendAsync<TokenResponse>(request, cancellationToken);
+    }
+
     public async Task<TokenResponse> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/token/refresh");
@@ -95,6 +104,252 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
         using var request = new HttpRequestMessage(HttpMethod.Delete, "/users")
         {
             Content = JsonContent.Create(new { users = userIds }, options: JsonOptions),
+        };
+
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task<List<Invite>> GetInvitesAsync(CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/invites");
+        var response = await SendAsync<GetInvitesResponse>(request, cancellationToken);
+        return response.Invites;
+    }
+
+    public async Task GenerateInviteAsync(GenerateInviteRequest request, CancellationToken cancellationToken)
+    {
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/invites")
+        {
+            Content = JsonContent.Create(request, options: JsonOptions),
+        };
+
+        await SendRawAsync(httpRequest, cancellationToken);
+    }
+
+    public async Task DeleteInviteAsync(string code, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Delete, "/invites")
+        {
+            Content = JsonContent.Create(new { code }, options: JsonOptions),
+        };
+
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task<ProfilesResponse> GetProfilesAsync(CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/profiles");
+        return await SendAsync<ProfilesResponse>(request, cancellationToken);
+    }
+
+    public async Task CreateProfileAsync(CreateProfileRequest request, CancellationToken cancellationToken)
+    {
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/profiles")
+        {
+            Content = JsonContent.Create(request, options: JsonOptions),
+        };
+
+        await SendRawAsync(httpRequest, cancellationToken);
+    }
+
+    public async Task DeleteProfileAsync(string name, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Delete, "/profiles")
+        {
+            Content = JsonContent.Create(new { name }, options: JsonOptions),
+        };
+
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task SetDefaultProfileAsync(string name, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/profiles/default")
+        {
+            Content = JsonContent.Create(new { name }, options: JsonOptions),
+        };
+
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task<GetActivitiesResponse> GetActivitiesAsync(SearchActivitiesRequest request, CancellationToken cancellationToken)
+    {
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/activity")
+        {
+            Content = JsonContent.Create(request, options: JsonOptions),
+        };
+
+        return await SendAsync<GetActivitiesResponse>(httpRequest, cancellationToken);
+    }
+
+    public async Task AnnounceAsync(AnnouncementRequest request, CancellationToken cancellationToken)
+    {
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/users/announce")
+        {
+            Content = JsonContent.Create(request, options: JsonOptions),
+        };
+
+        await SendRawAsync(httpRequest, cancellationToken);
+    }
+
+    public async Task<string> GetLogsAsync(CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/logs");
+        using var response = await SendRawAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        
+        using var doc = JsonDocument.Parse(body);
+        if (doc.RootElement.TryGetProperty("log", out var logElement))
+        {
+            return logElement.GetString() ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    public async Task<List<TaskInfo>> GetTasksAsync(CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/tasks");
+        var response = await SendAsync<TasksResponse>(request, cancellationToken);
+        return response.Tasks;
+    }
+
+    public async Task RunTaskAsync(string taskUrl, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, taskUrl);
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task RestartServerAsync(CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/restart");
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task<CreateUserResponse> CreateUserAsync(CreateUserRequest request, CancellationToken cancellationToken)
+    {
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/user")
+        {
+            Content = JsonContent.Create(request, options: JsonOptions),
+        };
+
+        return await SendAsync<CreateUserResponse>(httpRequest, cancellationToken);
+    }
+
+    public async Task ModifyEmailsAsync(Dictionary<string, string> userEmails, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/users/emails")
+        {
+            Content = JsonContent.Create(userEmails, options: JsonOptions),
+        };
+
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task ModifyLabelsAsync(Dictionary<string, string> userLabels, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/users/labels")
+        {
+            Content = JsonContent.Create(userLabels, options: JsonOptions),
+        };
+
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task SetAccountsAdminAsync(Dictionary<string, bool> admins, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/users/accounts-admin")
+        {
+            Content = JsonContent.Create(admins, options: JsonOptions),
+        };
+
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task ApplySettingsAsync(UserSettingsRequest request, CancellationToken cancellationToken)
+    {
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/users/settings")
+        {
+            Content = JsonContent.Create(request, options: JsonOptions),
+        };
+
+        await SendRawAsync(httpRequest, cancellationToken);
+    }
+
+    public async Task<List<BackupInfo>> GetBackupsAsync(CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/backups");
+        var response = await SendAsync<BackupsResponse>(request, cancellationToken);
+        return response.Backups;
+    }
+
+    public async Task CreateBackupAsync(CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/backups");
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task RestoreBackupAsync(string filename, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/backups/restore/{filename}");
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task<Models.GetServerConfigResponse> GetConfigAsync(CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/config");
+        return await SendAsync<Models.GetServerConfigResponse>(request, cancellationToken);
+    }
+
+    public async Task SaveConfigAsync(Dictionary<string, Dictionary<string, string>> config, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/config");
+        request.Content = JsonContent.Create(config, options: JsonOptions);
+        using var response = await SendRawAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new OmnifinApiException($"HTTP {(int)response.StatusCode}: {body}");
+        }
+    }
+
+    public async Task<RespUser> GetMyDetailsAsync(CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/my/details");
+        return await SendAsync<RespUser>(request, cancellationToken);
+    }
+
+    public async Task UpdateMyEmailAsync(string email, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/my/email")
+        {
+            Content = JsonContent.Create(new { email }, options: JsonOptions),
+        };
+
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task ChangeMyPasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/my/password")
+        {
+            Content = JsonContent.Create(new { password = currentPassword, newPassword }, options: JsonOptions),
+        };
+
+        await SendRawAsync(request, cancellationToken);
+    }
+
+    public async Task UpdateMyContactMethodsAsync(bool email, bool telegram, bool discord, bool matrix, CancellationToken cancellationToken)
+    {
+        var methods = new Dictionary<string, object>
+        {
+            ["email"] = email,
+            ["telegram"] = telegram,
+            ["discord"] = discord,
+            ["matrix"] = matrix
+        };
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/my/contact")
+        {
+            Content = JsonContent.Create(methods, options: JsonOptions),
         };
 
         await SendRawAsync(request, cancellationToken);

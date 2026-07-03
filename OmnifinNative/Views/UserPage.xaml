@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="OmnifinNative.Views.UserPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OmnifinNative.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Padding="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- User Self-Service Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,24" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,16">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <FontIcon Glyph="&#xE77B;" FontSize="28" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" />
+                <StackPanel Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="My Account Portal" FontSize="24" FontWeight="SemiBold" />
+                    <TextBlock x:Name="UserInfoText" FontSize="13" Opacity="0.6" Text="Logged in as: Fetching..." />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <ProgressRing x:Name="LoadingRing" IsActive="False" Width="20" Height="20" />
+                <TextBlock x:Name="StatusText" Foreground="Green" VerticalAlignment="Center" Visibility="Collapsed" />
+                <Button Click="LogoutButton_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xF3B1;" FontSize="14" />
+                        <TextBlock Text="Log Out" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Forms Grid -->
+        <Grid Grid.Row="1" ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Column 0: Notification Methods -->
+            <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Top">
+                <StackPanel Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{ThemeResource SystemAccentColor}" Opacity="0.15">
+                            <FontIcon Glyph="&#xE715;" FontSize="14" Foreground="{ThemeResource SystemAccentColor}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="Notification Settings" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="Choose which chatbot/email integrations are enabled for your system update notifications:" FontSize="12" Opacity="0.5" TextWrapping="Wrap" />
+
+                    <StackPanel Spacing="10" Margin="0,8,0,0">
+                        <CheckBox x:Name="EmailContactCheck" Content="Send updates via Email" />
+                        <CheckBox x:Name="TelegramContactCheck" Content="Send updates via Telegram" />
+                        <CheckBox x:Name="DiscordContactCheck" Content="Send updates via Discord" />
+                        <CheckBox x:Name="MatrixContactCheck" Content="Send updates via Matrix" />
+                    </StackPanel>
+
+                    <Button x:Name="SaveContactButton" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="SaveContactButton_Click" Margin="0,16,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE74E;" FontSize="14" />
+                            <TextBlock Text="Save Preferences" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Column 1: Password Modification -->
+            <Border Grid.Column="1" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Top">
+                <StackPanel Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{ThemeResource SystemAccentColor}" Opacity="0.15">
+                            <FontIcon Glyph="&#xE8D7;" FontSize="14" Foreground="{ThemeResource SystemAccentColor}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="Change Password" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="Modify your current login password for the Omnifin client and Jellyfin server:" FontSize="12" Opacity="0.5" TextWrapping="Wrap" />
+
+                    <PasswordBox x:Name="CurrentPasswordBox" Header="Current Password" Margin="0,8,0,0" />
+                    <PasswordBox x:Name="NewPasswordBox" Header="New Password" />
+                    <PasswordBox x:Name="ConfirmNewPasswordBox" Header="Confirm New Password" />
+
+                    <Button x:Name="ChangePasswordButton" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="ChangePasswordButton_Click" Margin="0,16,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE70F;" FontSize="14" />
+                            <TextBlock Text="Update Password" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="OmnifinNative.Views.InviteListPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OmnifinNative.Views"
+    xmlns:models="using:OmnifinNative.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Page Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
+            <FontIcon Glyph="&#xE71B;" FontSize="24" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" />
+            <TextBlock Text="Invites" Style="{StaticResource PageHeaderStyle}" />
+            <ProgressRing x:Name="LoadingRing" IsActive="False" Width="20" Height="20" VerticalAlignment="Center" />
+            <TextBlock x:Name="StatusText" VerticalAlignment="Center" Margin="8,0,0,0" Visibility="Collapsed" />
+        </StackPanel>
+
+        <!-- Command Bar -->
+        <CommandBar Grid.Row="1" DefaultLabelPosition="Right" HorizontalAlignment="Left" Background="Transparent" IsOpen="False" Margin="0,0,0,8">
+            <AppBarButton Icon="Refresh" Label="Refresh" Click="RefreshButton_Click" />
+            <AppBarButton Label="Create Invite">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE710;" />
+                </AppBarButton.Icon>
+                <AppBarButton.Flyout>
+                    <Flyout x:Name="CreateFlyout" Opened="CreateFlyout_Opened">
+                        <ScrollViewer MaxHeight="450" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Width="280" Spacing="10" Padding="4">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontSize="18" Foreground="{ThemeResource SystemAccentColor}" />
+                                    <TextBlock Text="Create New Invite" FontSize="16" FontWeight="SemiBold" />
+                                </StackPanel>
+                                
+                                <TextBox x:Name="InviteLabelBox" Header="Label" PlaceholderText="e.g. For friends" />
+                                
+                                <ComboBox x:Name="ProfileComboBox" Header="Profile" HorizontalAlignment="Stretch" />
+                                
+                                <TextBox x:Name="UserLabelBox" Header="User Label" PlaceholderText="Label applied to created user" />
+
+                                <CheckBox x:Name="MultipleUsesCheckBox" Content="Allow Multiple Uses" IsChecked="False" Checked="MultipleUses_Changed" Unchecked="MultipleUses_Changed" />
+                                
+                                <StackPanel x:Name="UsesSettingsPanel" Spacing="8" Visibility="Collapsed">
+                                    <CheckBox x:Name="NoLimitCheckBox" Content="Unlimited Uses" IsChecked="False" Checked="NoLimit_Changed" Unchecked="NoLimit_Changed" />
+                                    <NumberBox x:Name="RemainingUsesBox" Header="Remaining Uses" Value="5" Minimum="1" SmallChange="1" LargeChange="5" SpinButtonPlacementMode="Compact" />
+                                </StackPanel>
+
+                                <CheckBox x:Name="UserExpiryCheckBox" Content="Enable User Expiry" IsChecked="False" Checked="UserExpiry_Changed" Unchecked="UserExpiry_Changed" />
+                                
+                                <StackPanel x:Name="UserExpirySettingsPanel" Spacing="8" Visibility="Collapsed">
+                                    <NumberBox x:Name="UserDaysBox" Header="User Expiry Days" Value="30" Minimum="0" SmallChange="1" LargeChange="10" SpinButtonPlacementMode="Compact" />
+                                </StackPanel>
+
+                                <Button x:Name="ConfirmCreateButton" Content="Generate" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="ConfirmCreateButton_Click" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Flyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
+            <AppBarButton Label="Copy Code" Click="CopyButton_Click">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE8C8;" />
+                </AppBarButton.Icon>
+            </AppBarButton>
+
+            <AppBarSeparator />
+
+            <AppBarButton Label="Delete" Click="DeleteButton_Click">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE74D;" />
+                </AppBarButton.Icon>
+            </AppBarButton>
+        </CommandBar>
+
+        <!-- Invite List -->
+        <ListView
+            x:Name="InvitesListView"
+            Grid.Row="2"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            ItemsSource="{x:Bind Invites}"
+            SelectionMode="Single">
+            <ListView.HeaderTemplate>
+                <DataTemplate>
+                    <Grid Padding="16,10" ColumnSpacing="16" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="180" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Code" FontWeight="SemiBold" FontSize="12" Opacity="0.7" />
+                        <TextBlock Grid.Column="1" Text="Label" FontWeight="SemiBold" FontSize="12" Opacity="0.7" />
+                        <TextBlock Grid.Column="2" Text="Profile" FontWeight="SemiBold" FontSize="12" Opacity="0.7" />
+                        <TextBlock Grid.Column="3" Text="Uses" FontWeight="SemiBold" FontSize="12" Opacity="0.7" />
+                        <TextBlock Grid.Column="4" Text="Expires" FontWeight="SemiBold" FontSize="12" Opacity="0.7" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.HeaderTemplate>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="models:Invite">
+                    <Grid Padding="16,8" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="180" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE71B;" FontSize="14" Foreground="{ThemeResource SystemAccentColor}" />
+                            <TextBlock Text="{x:Bind Code}" FontWeight="Medium" FontFamily="Consolas" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{x:Bind Label}" VerticalAlignment="Center" Opacity="0.7" />
+                        <TextBlock Grid.Column="2" Text="{x:Bind Profile}" VerticalAlignment="Center" FontSize="13" />
+                        <TextBlock Grid.Column="3" Text="{x:Bind UsesDisplay}" VerticalAlignment="Center" FontSize="13" />
+                        <TextBlock Grid.Column="4" Text="{x:Bind FormattedValidTill}" VerticalAlignment="Center" FontSize="13" Opacity="0.6" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- Empty State -->
+        <StackPanel
+            x:Name="EmptyState"
+            Grid.Row="2"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            Spacing="8"
+            Visibility="Collapsed">
+            <FontIcon Glyph="&#xE71B;" Style="{StaticResource EmptyStateIconStyle}" />
+            <TextBlock Text="No invites yet" Style="{StaticResource EmptyStateTitleStyle}" />
+            <TextBlock Text="Create an invite code to let users join your server" Style="{StaticResource EmptyStateSubtitleStyle}" />
+        </StackPanel>
+    </Grid>
+</Page>

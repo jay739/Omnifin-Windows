@@ -9,39 +9,117 @@
     mc:Ignorable="d">
 
     <Grid>
-        <StackPanel
+        <!-- Centered Login Card -->
+        <Border
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Width="320"
-            Spacing="12">
+            CornerRadius="12"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            Padding="40,36"
+            Width="400">
 
-            <TextBlock Text="Omnifin" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" />
-            <TextBlock Text="Sign in with your admin account" Opacity="0.7" HorizontalAlignment="Center" Margin="0,0,0,12" />
+            <StackPanel Spacing="16">
 
-            <TextBox
-                x:Name="ServerUrlBox"
-                Header="Server URL"
-                PlaceholderText="https://your-omnifin-server.example.com" />
+                <!-- App Icon -->
+                <Image
+                    Source="Assets/AppIcon.ico"
+                    Width="64"
+                    Height="64"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,4" />
 
-            <TextBox x:Name="UsernameBox" Header="Username" />
-            <PasswordBox x:Name="PasswordBox" Header="Password" />
+                <!-- Title -->
+                <TextBlock
+                    Text="Omnifin"
+                    FontSize="28"
+                    FontWeight="Bold"
+                    HorizontalAlignment="Center" />
+                <TextBlock
+                    Text="Sign in to manage your media server"
+                    Opacity="0.6"
+                    FontSize="13"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,8" />
 
-            <TextBlock
-                x:Name="ErrorText"
-                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
-                TextWrapping="Wrap"
-                Visibility="Collapsed" />
+                <!-- Form Fields -->
+                <TextBox
+                    x:Name="ServerUrlBox"
+                    Header="Server URL"
+                    PlaceholderText="https://your-server.example.com">
+                    <TextBox.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE774;" FontSize="14" />
+                                <TextBlock Text="Server URL" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </TextBox.HeaderTemplate>
+                </TextBox>
 
-            <Button
-                x:Name="LoginButton"
-                Content="Sign in"
-                HorizontalAlignment="Stretch"
-                HorizontalContentAlignment="Center"
-                Style="{StaticResource AccentButtonStyle}"
-                Click="LoginButton_Click"
-                Margin="0,8,0,0" />
+                <TextBox
+                    x:Name="UsernameBox"
+                    Header="Username">
+                    <TextBox.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE77B;" FontSize="14" />
+                                <TextBlock Text="Username" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </TextBox.HeaderTemplate>
+                </TextBox>
 
-            <ProgressRing x:Name="LoginProgress" IsActive="False" Width="24" Height="24" HorizontalAlignment="Center" />
-        </StackPanel>
+                <PasswordBox
+                    x:Name="PasswordBox"
+                    Header="Password"
+                    KeyDown="PasswordBox_KeyDown">
+                    <PasswordBox.HeaderTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8D7;" FontSize="14" />
+                                <TextBlock Text="Password" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </PasswordBox.HeaderTemplate>
+                </PasswordBox>
+
+                <CheckBox
+                    x:Name="AdminLoginCheckBox"
+                    Content="Login as Administrator"
+                    IsChecked="True"
+                    Margin="0,4,0,0" />
+
+                <!-- Error Text -->
+                <TextBlock
+                    x:Name="ErrorText"
+                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                    TextWrapping="Wrap"
+                    Visibility="Collapsed" />
+
+                <!-- Sign In Button -->
+                <Button
+                    x:Name="LoginButton"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Click="LoginButton_Click"
+                    Margin="0,8,0,0"
+                    Padding="0,10">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE8D7;" FontSize="16" />
+                        <TextBlock Text="Sign In" />
+                    </StackPanel>
+                </Button>
+
+                <ProgressRing
+                    x:Name="LoginProgress"
+                    IsActive="False"
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Page>

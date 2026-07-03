@@ -6,11 +6,49 @@
     xmlns:local="using:OmnifinNative">
     <Application.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <Color x:Key="SystemAccentColor">#D97706</Color>
+                    <Color x:Key="SystemAccentColorLight1">#F59E0B</Color>
+                    <Color x:Key="SystemAccentColorLight2">#FBBF24</Color>
+                    <Color x:Key="SystemAccentColorLight3">#FCD34D</Color>
+                    <Color x:Key="SystemAccentColorDark1">#B45309</Color>
+                    <Color x:Key="SystemAccentColorDark2">#92400E</Color>
+                    <Color x:Key="SystemAccentColorDark3">#78350F</Color>
+                </ResourceDictionary>
+                
+                <ResourceDictionary x:Key="Light">
+                    <Color x:Key="SystemAccentColor">#D97706</Color>
+                    <Color x:Key="SystemAccentColorLight1">#F59E0B</Color>
+                    <Color x:Key="SystemAccentColorLight2">#FBBF24</Color>
+                    <Color x:Key="SystemAccentColorLight3">#FCD34D</Color>
+                    <Color x:Key="SystemAccentColorDark1">#B45309</Color>
+                    <Color x:Key="SystemAccentColorDark2">#92400E</Color>
+                    <Color x:Key="SystemAccentColorDark3">#78350F</Color>
+                </ResourceDictionary>
+                
+                <ResourceDictionary x:Key="Dark">
+                    <Color x:Key="SystemAccentColor">#F59E0B</Color>
+                    <Color x:Key="SystemAccentColorLight1">#FBBF24</Color>
+                    <Color x:Key="SystemAccentColorLight2">#FCD34D</Color>
+                    <Color x:Key="SystemAccentColorLight3">#FDE68A</Color>
+                    <Color x:Key="SystemAccentColorDark1">#D97706</Color>
+                    <Color x:Key="SystemAccentColorDark2">#B45309</Color>
+                    <Color x:Key="SystemAccentColorDark3">#92400E</Color>
+                    
+                    <!-- AMOLED pitch-black dark mode background overrides -->
+                    <SolidColorBrush x:Key="ApplicationPageBackgroundThemeBrush" Color="#000000" />
+                    <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="#000000" />
+                    <SolidColorBrush x:Key="NavigationViewDefaultAreaBackground" Color="#000000" />
+                    <SolidColorBrush x:Key="NavigationViewExpandedAreaBackground" Color="#000000" />
+                    <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="#0D0D0D" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
+                <ResourceDictionary Source="Styles/AppStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
         </ResourceDictionary>
     </Application.Resources>
 </Application>

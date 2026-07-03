@@ -41,11 +41,20 @@ public sealed partial class LoginPage : Page
         try
         {
             App.Api.ServerBaseAddress = serverUrl;
-            await App.Auth.LoginAsync(UsernameBox.Text, PasswordBox.Password, CancellationToken.None);
+            bool isAdmin = AdminLoginCheckBox.IsChecked == true;
+            await App.Auth.LoginAsync(UsernameBox.Text, PasswordBox.Password, isAdmin, CancellationToken.None);
             ServerSettings.SaveServerUrl(serverUrl);
-            Frame.Navigate(typeof(AccountListPage));
+            
+            if (isAdmin)
+            {
+                Frame.Navigate(typeof(OmnifinNative.Views.MainPage));
+            }
+            else
+            {
+                Frame.Navigate(typeof(OmnifinNative.Views.UserPage));
+            }
         }
-        catch (OmnifinApiException ex)
+        catch (Exception ex)
         {
             ErrorText.Text = ex.Message;
             ErrorText.Visibility = Visibility.Visible;
@@ -54,6 +63,13 @@ public sealed partial class LoginPage : Page
         {
             LoginButton.IsEnabled = true;
             LoginProgress.IsActive = false;
+        }
+    }
+    private void PasswordBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            LoginButton_Click(LoginButton, new RoutedEventArgs());
         }
     }
 }

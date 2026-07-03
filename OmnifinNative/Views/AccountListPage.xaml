@@ -12,68 +12,188 @@
 
     <Page.Resources>
         <converters:BoolToStatusConverter x:Key="BoolToStatusConverter" />
+        <converters:BoolToStatusBrushConverter x:Key="BoolToStatusBrushConverter" />
         <converters:SecondsToDurationConverter x:Key="SecondsToDurationConverter" />
     </Page.Resources>
 
     <Grid Padding="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
-            <TextBlock Text="Accounts" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <Button Content="Refresh" Click="RefreshButton_Click" />
-            <Button Content="Enable" Click="EnableButton_Click" />
-            <Button Content="Disable" Click="DisableButton_Click" />
-            <Button Content="Extend 30 days" Click="ExtendButton_Click" />
-            <Button Content="Delete" Click="DeleteButton_Click" Style="{StaticResource AccentButtonStyle}" />
+        <!-- Page Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
+            <FontIcon Glyph="&#xE77B;" FontSize="24" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" />
+            <TextBlock Text="Accounts" Style="{StaticResource PageHeaderStyle}" />
             <ProgressRing x:Name="LoadingRing" IsActive="False" Width="20" Height="20" VerticalAlignment="Center" />
+            <TextBlock x:Name="StatusText" VerticalAlignment="Center" Margin="8,0,0,0" Visibility="Collapsed" />
         </StackPanel>
 
+        <!-- Command Bar -->
+        <CommandBar Grid.Row="1" DefaultLabelPosition="Right" HorizontalAlignment="Left" Background="Transparent" IsOpen="False" Margin="0,0,0,8">
+            <AppBarButton Icon="Refresh" Label="Refresh" Click="RefreshButton_Click" />
+            <AppBarButton Label="Create User">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE8FA;" />
+                </AppBarButton.Icon>
+                <AppBarButton.Flyout>
+                    <Flyout x:Name="CreateUserFlyout" Opened="CreateUserFlyout_Opened">
+                        <ScrollViewer MaxHeight="450" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Width="280" Spacing="10" Padding="4">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE8FA;" FontSize="18" Foreground="{ThemeResource SystemAccentColor}" />
+                                    <TextBlock Text="Create New User" FontSize="16" FontWeight="SemiBold" />
+                                </StackPanel>
+                                <TextBox x:Name="NewUsernameBox" Header="Username" PlaceholderText="e.g. johndoe" />
+                                <PasswordBox x:Name="NewPasswordBox" Header="Password" />
+                                <TextBox x:Name="NewEmailBox" Header="Email Address" PlaceholderText="e.g. john@example.com" />
+                                <CheckBox x:Name="EmailContactCheckBox" Content="Send Notifications by Email" IsChecked="True" />
+                                <ComboBox x:Name="ProfileComboBox" Header="Profile" HorizontalAlignment="Stretch" />
+                                <Button x:Name="ConfirmCreateButton" Content="Create" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="ConfirmCreateUserButton_Click" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Flyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
+            <AppBarButton Label="Edit">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE70F;" />
+                </AppBarButton.Icon>
+                <AppBarButton.Flyout>
+                    <Flyout x:Name="EditUserFlyout" Opened="EditUserFlyout_Opened">
+                        <ScrollViewer MaxHeight="450" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Width="280" Spacing="10" Padding="4">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE70F;" FontSize="18" Foreground="{ThemeResource SystemAccentColor}" />
+                                    <TextBlock Text="Edit User Settings" FontSize="16" FontWeight="SemiBold" />
+                                </StackPanel>
+                                <TextBlock x:Name="EditUserHeadingText" FontSize="12" Opacity="0.7" Text="Target User: " />
+                                <TextBox x:Name="EditEmailBox" Header="Email Address" />
+                                <TextBox x:Name="EditLabelBox" Header="Custom Label" />
+                                <CheckBox x:Name="EditAdminCheckBox" Content="Omnifin Administrator" />
+                                
+                                <Border BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}" BorderThickness="0,1,0,0" Padding="0,8,0,0">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Apply Profile Presets" FontWeight="SemiBold" FontSize="12" />
+                                        <ComboBox x:Name="EditProfileComboBox" Header="Profile" HorizontalAlignment="Stretch" />
+                                        <CheckBox x:Name="ApplyPolicyCheckBox" Content="Apply Policy Configuration" IsChecked="True" />
+                                        <CheckBox x:Name="ApplyHomescreenCheckBox" Content="Apply Homescreen Layout" IsChecked="True" />
+                                    </StackPanel>
+                                </Border>
+                                
+                                <Button x:Name="ConfirmEditButton" Content="Apply Changes" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="ConfirmEditUserButton_Click" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Flyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
+
+            <AppBarSeparator />
+
+            <AppBarButton Label="Enable" Click="EnableButton_Click">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE73E;" />
+                </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton Label="Disable" Click="DisableButton_Click">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE711;" />
+                </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton Label="Extend 30d" Click="ExtendButton_Click">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE787;" />
+                </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton Label="Delete" Click="DeleteButton_Click">
+                <AppBarButton.Icon>
+                    <FontIcon Glyph="&#xE74D;" />
+                </AppBarButton.Icon>
+            </AppBarButton>
+        </CommandBar>
+
+        <!-- User List -->
         <ListView
             x:Name="UsersListView"
-            Grid.Row="1"
+            Grid.Row="2"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
             ItemsSource="{x:Bind Users}"
             SelectionMode="Multiple">
             <ListView.HeaderTemplate>
                 <DataTemplate>
-                    <Grid Padding="12,6" ColumnSpacing="16">
+                    <Grid Padding="16,10" ColumnSpacing="16" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="36" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="200" />
                             <ColumnDefinition Width="120" />
-                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="100" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Name" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="1" Text="Email" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="2" Text="Watch time" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="3" Text="Status" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="0" Text="" />
+                        <TextBlock Grid.Column="1" Text="Name" FontWeight="SemiBold" FontSize="12" Opacity="0.7" />
+                        <TextBlock Grid.Column="2" Text="Email" FontWeight="SemiBold" FontSize="12" Opacity="0.7" />
+                        <TextBlock Grid.Column="3" Text="Watch Time" FontWeight="SemiBold" FontSize="12" Opacity="0.7" />
+                        <TextBlock Grid.Column="4" Text="Status" FontWeight="SemiBold" FontSize="12" Opacity="0.7" />
                     </Grid>
                 </DataTemplate>
             </ListView.HeaderTemplate>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="models:RespUser">
-                    <Grid Padding="12,6" ColumnSpacing="16">
+                    <Grid Padding="16,8" ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="36" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="200" />
                             <ColumnDefinition Width="120" />
-                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="100" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{x:Bind Name}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind Email}" VerticalAlignment="Center" Opacity="0.7" />
-                        <TextBlock
-                            Grid.Column="2"
-                            Text="{x:Bind WatchTimeSeconds, Converter={StaticResource SecondsToDurationConverter}}"
-                            VerticalAlignment="Center" />
+
+                        <!-- User Avatar -->
+                        <PersonPicture Grid.Column="0" Width="28" Height="28" DisplayName="{x:Bind Name}" />
+
+                        <!-- Name -->
+                        <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" FontWeight="Medium" />
+
+                        <!-- Email -->
+                        <TextBlock Grid.Column="2" Text="{x:Bind Email}" VerticalAlignment="Center" Opacity="0.6" FontSize="13" />
+
+                        <!-- Watch Time -->
                         <TextBlock
                             Grid.Column="3"
-                            Text="{x:Bind Disabled, Converter={StaticResource BoolToStatusConverter}}"
-                            VerticalAlignment="Center" />
+                            Text="{x:Bind WatchTimeSeconds, Converter={StaticResource SecondsToDurationConverter}}"
+                            VerticalAlignment="Center"
+                            FontSize="13" />
+
+                        <!-- Status Badge -->
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <Ellipse Width="8" Height="8"
+                                Fill="{x:Bind Disabled, Converter={StaticResource BoolToStatusBrushConverter}}"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                Text="{x:Bind Disabled, Converter={StaticResource BoolToStatusConverter}}"
+                                VerticalAlignment="Center"
+                                FontSize="12" />
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+
+        <!-- Empty State -->
+        <StackPanel
+            x:Name="EmptyState"
+            Grid.Row="2"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            Spacing="8"
+            Visibility="Collapsed">
+            <FontIcon Glyph="&#xE77B;" Style="{StaticResource EmptyStateIconStyle}" />
+            <TextBlock Text="No accounts found" Style="{StaticResource EmptyStateTitleStyle}" />
+            <TextBlock Text="Create a new user to get started" Style="{StaticResource EmptyStateSubtitleStyle}" />
+        </StackPanel>
     </Grid>
 </Page>

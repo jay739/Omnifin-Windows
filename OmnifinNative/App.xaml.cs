@@ -32,7 +32,11 @@ public partial class App : Application
         }
 
         var restored = savedServerUrl is not null && await Auth.TryRestoreSessionAsync(CancellationToken.None);
-        var startPage = restored ? typeof(AccountListPage) : typeof(LoginPage);
+        Type startPage = typeof(LoginPage);
+        if (restored)
+        {
+            startPage = Auth.IsAdmin ? typeof(OmnifinNative.Views.MainPage) : typeof(OmnifinNative.Views.UserPage);
+        }
         ((MainWindow)_window).Navigate(startPage);
     }
 }
