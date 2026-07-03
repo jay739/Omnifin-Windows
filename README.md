@@ -28,6 +28,8 @@ If you add new settings, keep them user-provided at runtime or store them locall
 
 The repository includes a GitHub Actions workflow that publishes a Windows x64 build artifact. It uses a Release publish for the app and packages the output as a zip file that contains the executable and its runtime files.
 
+If you push a tag that starts with `v`, the workflow also creates a GitHub Release and attaches the zip asset to it.
+
 To run it, open the Actions tab in GitHub and start the workflow manually, or push to the default branch if you want it to run automatically.
 
 ## Local development
