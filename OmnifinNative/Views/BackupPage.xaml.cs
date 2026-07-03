@@ -100,9 +100,9 @@ public sealed partial class BackupPage : Page
             {
                 await App.Api.RestoreBackupAsync(selected.Name, CancellationToken.None);
                 ShowStatus("Database restored successfully! Logging out...", isError: false);
-                
+
                 App.Auth.Logout();
-                
+
                 var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
                 timer.Tick += (s, ev) =>
                 {
@@ -123,8 +123,8 @@ public sealed partial class BackupPage : Page
     private void ShowStatus(string message, bool isError)
     {
         StatusText.Text = message;
-        StatusText.Foreground = isError ? 
-            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) : 
+        StatusText.Foreground = isError ?
+            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) :
             new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 34, 197, 94));
         StatusText.Visibility = Visibility.Visible;
 

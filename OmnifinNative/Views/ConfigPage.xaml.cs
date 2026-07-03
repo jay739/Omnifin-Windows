@@ -64,7 +64,8 @@ public sealed partial class ConfigPage : Page
         if (_configResponse?.Sections is null) return;
 
         var sortedSections = _configResponse.Sections
-            .OrderBy(s => {
+            .OrderBy(s =>
+            {
                 int index = SectionOrder.IndexOf(s.Section.ToLowerInvariant());
                 return index >= 0 ? index : 100;
             })
@@ -77,19 +78,19 @@ public sealed partial class ConfigPage : Page
 
             var sectionName = section.Section;
             var scrollViewer = new ScrollViewer { Margin = new Thickness(0, 12, 0, 0) };
-            var stackPanel = new StackPanel 
-            { 
-                Spacing = 16, 
-                MaxWidth = 550, 
+            var stackPanel = new StackPanel
+            {
+                Spacing = 16,
+                MaxWidth = 550,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Padding = new Thickness(4, 0, 16, 16)
             };
             scrollViewer.Content = stackPanel;
 
             // Section Header
-            stackPanel.Children.Add(new TextBlock 
-            { 
-                Text = section.Meta.Name, 
+            stackPanel.Children.Add(new TextBlock
+            {
+                Text = section.Meta.Name,
                 FontSize = 18,
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 Margin = new Thickness(0, 0, 0, 2)
@@ -98,9 +99,9 @@ public sealed partial class ConfigPage : Page
             // Section Description Subtitle
             if (!string.IsNullOrWhiteSpace(section.Meta.Description))
             {
-                var secDesc = new TextBlock 
-                { 
-                    Text = section.Meta.Description, 
+                var secDesc = new TextBlock
+                {
+                    Text = section.Meta.Description,
                     FontSize = 12,
                     TextWrapping = TextWrapping.Wrap,
                     Margin = new Thickness(0, 0, 0, 12),
@@ -140,9 +141,9 @@ public sealed partial class ConfigPage : Page
                         isChecked = true;
                     }
 
-                    var checkBox = new CheckBox 
-                    { 
-                        Content = displayName, 
+                    var checkBox = new CheckBox
+                    {
+                        Content = displayName,
                         IsChecked = isChecked,
                         Margin = new Thickness(0, 4, 0, 4)
                     };
@@ -152,8 +153,8 @@ public sealed partial class ConfigPage : Page
                 else if (settingType == "select" && setting.Options is not null && setting.Options.Count > 0)
                 {
                     var valStr = GetSettingStringValue(settingVal);
-                    var comboBox = new ComboBox 
-                    { 
+                    var comboBox = new ComboBox
+                    {
                         Header = displayName,
                         HorizontalAlignment = HorizontalAlignment.Stretch,
                         Width = 450
@@ -185,16 +186,16 @@ public sealed partial class ConfigPage : Page
                 else
                 {
                     var valStr = GetSettingStringValue(settingVal);
-                    var isPassword = settingType == "password" || 
-                                     settingName.Contains("password", StringComparison.OrdinalIgnoreCase) || 
+                    var isPassword = settingType == "password" ||
+                                     settingName.Contains("password", StringComparison.OrdinalIgnoreCase) ||
                                      settingName.Contains("token", StringComparison.OrdinalIgnoreCase) ||
                                      settingName.Contains("secret", StringComparison.OrdinalIgnoreCase);
 
                     if (isPassword)
                     {
-                        var passwordBox = new PasswordBox 
-                        { 
-                            Header = displayName, 
+                        var passwordBox = new PasswordBox
+                        {
+                            Header = displayName,
                             Password = valStr,
                             HorizontalAlignment = HorizontalAlignment.Stretch,
                             Width = 450
@@ -204,9 +205,9 @@ public sealed partial class ConfigPage : Page
                     }
                     else
                     {
-                        var textBox = new TextBox 
-                        { 
-                            Header = displayName, 
+                        var textBox = new TextBox
+                        {
+                            Header = displayName,
                             Text = valStr,
                             HorizontalAlignment = HorizontalAlignment.Stretch,
                             Width = 450
@@ -226,16 +227,16 @@ public sealed partial class ConfigPage : Page
 
                 if (!string.IsNullOrWhiteSpace(helperText))
                 {
-                    var textBlock = new TextBlock 
-                    { 
-                        Text = helperText, 
+                    var textBlock = new TextBlock
+                    {
+                        Text = helperText,
                         FontSize = 12,
                         TextWrapping = TextWrapping.Wrap,
                         Margin = new Thickness(0, -8, 0, 8),
                         Width = 450,
                         HorizontalAlignment = HorizontalAlignment.Left
                     };
-                    
+
                     if (setting.RequiresRestart)
                     {
                         textBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 245, 158, 11));
@@ -244,7 +245,7 @@ public sealed partial class ConfigPage : Page
                     {
                         textBlock.Foreground = brush;
                     }
-                    
+
                     stackPanel.Children.Add(textBlock);
                 }
             }
@@ -269,14 +270,14 @@ public sealed partial class ConfigPage : Page
             }
 
             headerStack.Children.Add(sectionIcon);
-            headerStack.Children.Add(new TextBlock 
-            { 
-                Text = section.Meta.Name, 
-                VerticalAlignment = VerticalAlignment.Center 
+            headerStack.Children.Add(new TextBlock
+            {
+                Text = section.Meta.Name,
+                VerticalAlignment = VerticalAlignment.Center
             });
 
-            var pivotItem = new PivotItem 
-            { 
+            var pivotItem = new PivotItem
+            {
                 Header = headerStack,
                 Content = scrollViewer
             };
@@ -382,8 +383,8 @@ public sealed partial class ConfigPage : Page
     private void ShowStatus(string message, bool isError)
     {
         StatusText.Text = message;
-        StatusText.Foreground = isError ? 
-            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) : 
+        StatusText.Foreground = isError ?
+            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) :
             new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 34, 197, 94));
         StatusText.Visibility = Visibility.Visible;
 

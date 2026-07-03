@@ -37,7 +37,7 @@ public sealed class AuthService(OmnifinApiClient apiClient)
 
     public async Task LoginAsync(string username, string password, bool isAdmin, CancellationToken cancellationToken)
     {
-        var tokens = isAdmin 
+        var tokens = isAdmin
             ? await apiClient.LoginAsync(username, password, cancellationToken)
             : await apiClient.LoginUserAsync(username, password, cancellationToken);
         ApplyTokens(tokens);

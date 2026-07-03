@@ -25,13 +25,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore .\OmnifinNative\OmnifinNative.csproj
+        run: dotnet restore .\OmnifinNative\OmnifinNative.csproj -r win-x64
 
       - name: Check formatting and analyzers
         run: dotnet format .\OmnifinNative\OmnifinNative.csproj --verify-no-changes --no-restore
 
       - name: Build project
-        run: dotnet build .\OmnifinNative\OmnifinNative.csproj -c Release --no-restore -warnaserror
+        run: dotnet build .\OmnifinNative\OmnifinNative.csproj -c Release -r win-x64 --no-restore -warnaserror /p:PublishReadyToRun=false
 
   release:
     needs: validate
@@ -48,7 +48,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore .\OmnifinNative\OmnifinNative.csproj
+        run: dotnet restore .\OmnifinNative\OmnifinNative.csproj -r win-x64
 
       - name: Publish Windows x64 executable
         run: >
@@ -56,8 +56,7 @@ jobs:
           -c Release
           -r win-x64
           --self-contained true
-          /p:PublishSingleFile=true
-          /p:IncludeNativeLibrariesForSelfExtract=true
+          /p:PublishReadyToRun=false
           /p:PublishTrimmed=false
           -o .\artifacts\publish
 

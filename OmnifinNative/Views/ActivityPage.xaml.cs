@@ -42,7 +42,7 @@ public sealed partial class ActivityPage : Page
             };
 
             var response = await App.Api.GetActivitiesAsync(request, CancellationToken.None);
-            
+
             Activities.Clear();
             if (response?.Activities is not null)
             {

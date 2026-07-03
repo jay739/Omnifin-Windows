@@ -67,7 +67,7 @@ public sealed partial class AnnouncePage : Page
     private void UsersListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isUpdatingSelection) return;
-        
+
         if (UsersListView.SelectedItems.Count == Users.Count)
         {
             SelectAllCheckBox.IsChecked = true;
@@ -152,8 +152,8 @@ public sealed partial class AnnouncePage : Page
     private void ShowStatus(string message, bool isError)
     {
         StatusText.Text = message;
-        StatusText.Foreground = isError ? 
-            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) : 
+        StatusText.Foreground = isError ?
+            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) :
             new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 34, 197, 94));
         StatusText.Visibility = Visibility.Visible;
 

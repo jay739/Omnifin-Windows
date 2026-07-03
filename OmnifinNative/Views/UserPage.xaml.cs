@@ -30,7 +30,7 @@ public sealed partial class UserPage : Page
             if (_currentUser is not null)
             {
                 UserInfoText.Text = $"Username: {_currentUser.Name} | Email: {_currentUser.Email ?? "None"}";
-                
+
                 // Pre-check contact methods from API.
                 // In Go backend, standard users have attributes like email_contact, telegram_contact, etc.
                 // Let's see: standard user details API in Go returns UserDTO which has these settings.
@@ -114,7 +114,7 @@ public sealed partial class UserPage : Page
         {
             await App.Api.ChangeMyPasswordAsync(currentPw, newPw, CancellationToken.None);
             ShowStatus("Password changed successfully!", isError: false);
-            
+
             // Clear boxes
             CurrentPasswordBox.Password = string.Empty;
             NewPasswordBox.Password = string.Empty;
@@ -134,8 +134,8 @@ public sealed partial class UserPage : Page
     private void ShowStatus(string message, bool isError)
     {
         StatusText.Text = message;
-        StatusText.Foreground = isError ? 
-            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) : 
+        StatusText.Foreground = isError ?
+            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) :
             new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 34, 197, 94));
         StatusText.Visibility = Visibility.Visible;
 

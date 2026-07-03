@@ -65,7 +65,7 @@ public sealed partial class SystemPage : Page
         {
             var logs = await App.Api.GetLogsAsync(CancellationToken.None);
             LogsTextBox.Text = logs;
-            
+
             // Scroll to end of logs
             LogsTextBox.Select(LogsTextBox.Text.Length, 0);
         }
@@ -132,10 +132,10 @@ public sealed partial class SystemPage : Page
             {
                 await App.Api.RestartServerAsync(CancellationToken.None);
                 ShowStatus("Restart command sent. The server is restarting...", isError: false);
-                
+
                 // Clear local session because server restarts invalidate state
                 App.Auth.Logout();
-                
+
                 var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
                 timer.Tick += (s, ev) =>
                 {
@@ -156,8 +156,8 @@ public sealed partial class SystemPage : Page
     private void ShowStatus(string message, bool isError)
     {
         StatusText.Text = message;
-        StatusText.Foreground = isError ? 
-            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) : 
+        StatusText.Foreground = isError ?
+            new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) :
             new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 34, 197, 94));
         StatusText.Visibility = Visibility.Visible;
 

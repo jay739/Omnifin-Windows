@@ -44,7 +44,7 @@ public sealed partial class LoginPage : Page
             bool isAdmin = AdminLoginCheckBox.IsChecked == true;
             await App.Auth.LoginAsync(UsernameBox.Text, PasswordBox.Password, isAdmin, CancellationToken.None);
             ServerSettings.SaveServerUrl(serverUrl);
-            
+
             if (isAdmin)
             {
                 Frame.Navigate(typeof(OmnifinNative.Views.MainPage));

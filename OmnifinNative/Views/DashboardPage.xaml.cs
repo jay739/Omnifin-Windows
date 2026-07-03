@@ -264,8 +264,8 @@ public sealed partial class DashboardPage : Page, INotifyPropertyChanged
         try
         {
             var tasks = await App.Api.GetTasksAsync(CancellationToken.None);
-            var task = tasks.Find(t => 
-                t.Name.Contains("housekeeping", System.StringComparison.OrdinalIgnoreCase) || 
+            var task = tasks.Find(t =>
+                t.Name.Contains("housekeeping", System.StringComparison.OrdinalIgnoreCase) ||
                 t.Name.Contains("clean", System.StringComparison.OrdinalIgnoreCase) ||
                 t.Url.Contains("housekeeping", System.StringComparison.OrdinalIgnoreCase));
 
@@ -310,9 +310,9 @@ public sealed partial class DashboardPage : Page, INotifyPropertyChanged
             {
                 await App.Api.RestartServerAsync(CancellationToken.None);
                 ShowStatus("Restart command sent. The server is restarting...", isError: false);
-                
+
                 App.Auth.Logout();
-                
+
                 var timer = new DispatcherTimer { Interval = System.TimeSpan.FromSeconds(3) };
                 timer.Tick += (s, ev) =>
                 {
@@ -333,8 +333,8 @@ public sealed partial class DashboardPage : Page, INotifyPropertyChanged
     private void ShowStatus(string message, bool isError)
     {
         StatusText.Text = message;
-        StatusText.Foreground = isError ? 
-            new SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) : 
+        StatusText.Foreground = isError ?
+            new SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)) :
             new SolidColorBrush(Windows.UI.Color.FromArgb(255, 34, 197, 94));
         StatusText.Visibility = Visibility.Visible;
 

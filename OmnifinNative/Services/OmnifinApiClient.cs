@@ -197,7 +197,7 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
         using var request = new HttpRequestMessage(HttpMethod.Get, "/logs");
         using var response = await SendRawAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        
+
         using var doc = JsonDocument.Parse(body);
         if (doc.RootElement.TryGetProperty("log", out var logElement))
         {
