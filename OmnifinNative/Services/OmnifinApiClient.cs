@@ -332,7 +332,7 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "/my/password")
         {
-            Content = JsonContent.Create(new { password = currentPassword, newPassword }, options: JsonOptions),
+            Content = JsonContent.Create(new { old = currentPassword, @new = newPassword }, options: JsonOptions),
         };
 
         await SendRawAsync(request, cancellationToken);
