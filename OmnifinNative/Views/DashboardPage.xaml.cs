@@ -152,7 +152,7 @@ public sealed partial class DashboardPage : Page, INotifyPropertyChanged
             StreamersCountText = $"Across {watchTime.Count} active accounts";
 
             // 4. Parse Invites
-            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var activeInvites = invites.Count(i => (i.NoLimit || i.RemainingUses > 0) && (i.ValidTill == 0 || i.ValidTill > now));
             var totalRemainingUses = invites.Where(i => !i.NoLimit && (i.ValidTill == 0 || i.ValidTill > now)).Sum(i => i.RemainingUses);
             var infiniteInvites = invites.Count(i => i.NoLimit && (i.ValidTill == 0 || i.ValidTill > now));
