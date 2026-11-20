@@ -65,10 +65,10 @@ public sealed class Invite
     public string UserLabel { get; set; } = string.Empty;
 
     [JsonIgnore]
-    public string FormattedValidTill => ValidTill == 0 ? "Never" : DateTimeOffset.FromUnixTimeMilliseconds(ValidTill).LocalDateTime.ToString("g");
+    public string FormattedValidTill => ValidTill == 0 ? "Never" : DateTimeOffset.FromUnixTimeSeconds(ValidTill).LocalDateTime.ToString("g");
 
     [JsonIgnore]
-    public string FormattedCreated => Created == 0 ? "N/A" : DateTimeOffset.FromUnixTimeMilliseconds(Created).LocalDateTime.ToString("g");
+    public string FormattedCreated => Created == 0 ? "N/A" : DateTimeOffset.FromUnixTimeSeconds(Created).LocalDateTime.ToString("g");
 
     [JsonIgnore]
     public string UsesDisplay => NoLimit ? "Infinite" : $"{RemainingUses} remaining";
