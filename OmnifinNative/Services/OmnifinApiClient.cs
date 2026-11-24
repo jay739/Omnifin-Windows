@@ -370,9 +370,21 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
         }
 
         // Resolve each request without changing HttpClient settings after first use.
-        request.RequestUri = request.RequestUri is null
-            ? serverBaseAddress
-            : new Uri(serverBaseAddress, request.RequestUri);
+        var requestUri = request.RequestUri;
+        if (requestUri is null)
+        {
+            request.RequestUri = serverBaseAddress;
+        }
+        else if (!requestUri.IsAbsoluteUri)
+        {
+            var baseUri = new UriBuilder(serverBaseAddress)
+            {
+                Path = serverBaseAddress.AbsolutePath.TrimEnd('/') + "/",
+                Query = string.Empty,
+                Fragment = string.Empty,
+            }.Uri;
+            request.RequestUri = new Uri(baseUri, requestUri.OriginalString.TrimStart('/'));
+        }
 
         if (request.Headers.Authorization is null && AccessToken is not null)
         {
