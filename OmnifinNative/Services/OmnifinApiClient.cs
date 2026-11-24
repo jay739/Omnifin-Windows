@@ -46,13 +46,41 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
 
     public async Task<List<RespUser>> SearchUsersAsync(UserSearchRequest request, CancellationToken cancellationToken)
     {
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/users")
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.Limit);
+        ArgumentOutOfRangeException.ThrowIfNegative(request.Page);
+        // Each caller displays the result as a complete user list.
+        var users = new List<RespUser>();
+        var page = request.Page;
+        while (true)
         {
-            Content = JsonContent.Create(request, options: JsonOptions),
-        };
+            var pageRequest = new UserSearchRequest
+            {
+                Limit = request.Limit,
+                Page = page,
+                SortByField = request.SortByField,
+                Ascending = request.Ascending,
+                SearchTerms = request.SearchTerms,
+            };
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/users")
+            {
+                Content = JsonContent.Create(pageRequest, options: JsonOptions),
+            };
 
-        var response = await SendAsync<GetUsersResponse>(httpRequest, cancellationToken);
-        return response.Users;
+            var response = await SendAsync<GetUsersResponse>(httpRequest, cancellationToken);
+            if (response.Users is not null)
+            {
+                users.AddRange(response.Users);
+            }
+            if (response.LastPage)
+            {
+                return users;
+            }
+            if (response.Users is not { Count: > 0 })
+            {
+                throw new OmnifinApiException("The server returned an empty user page without marking the search complete. Reload the user list to try again.");
+            }
+            page++;
+        }
     }
 
     public async Task<Dictionary<string, long>> GetWatchTimeAsync(CancellationToken cancellationToken)
