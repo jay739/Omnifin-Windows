@@ -58,6 +58,39 @@ await client.RunTaskAsync(new Uri(second.BaseAddress, "absolute-task").AbsoluteU
 Check(second.LastRequestTarget == "/absolute-task", "An absolute request URL was rewritten.");
 Console.WriteLine("PASS absolute request URLs are preserved");
 
+client.ServerBaseAddress = first.BaseAddress;
+first.SuccessBody = """
+    {
+        "id": "fixture-user", "username": "Alice", "expiry": 1800000000,
+        "admin": true, "accounts_admin": true, "disabled": true, "has_referrals": true,
+        "email": {"value": "alice@example.invalid", "enabled": true},
+        "discord": {"value": "alice#1234", "enabled": false},
+        "telegram": {"value": "alice", "enabled": true},
+        "matrix": {"value": "@alice:example.invalid", "enabled": false}
+    }
+    """;
+var details = await client.GetMyDetailsAsync(timeout.Token);
+Check(first.LastRequestTarget == "/my/details", "Self-service details used the wrong route.");
+Check(details.Id == "fixture-user" && details.Username == "Alice", "Self-service identity was lost.");
+Check(details.Expiry == 1800000000 && details.Admin && details.AccountsAdmin && details.Disabled && details.HasReferrals,
+    "Self-service account fields were lost.");
+Check(details.Email is { Value: "alice@example.invalid", Enabled: true }, "Email contact was not read.");
+Check(details.Discord is { Value: "alice#1234", Enabled: false }, "Discord contact was not read.");
+Check(details.Telegram is { Value: "alice", Enabled: true }, "Telegram contact was not read.");
+Check(details.Matrix is { Value: "@alice:example.invalid", Enabled: false }, "Matrix contact was not read.");
+Console.WriteLine("PASS self-service identity, account fields and nested contacts");
+
+foreach (var contacts in new[] { "", ",\"email\":null,\"discord\":null,\"telegram\":null,\"matrix\":null" })
+{
+    first.SuccessBody = "{\"id\":\"fixture-user\",\"username\":\"Alice\"" + contacts + "}";
+    details = await client.GetMyDetailsAsync(timeout.Token);
+    Check(details.Username == "Alice", "Username was lost when optional contacts were absent.");
+    Check(details.Email is null && details.Discord is null && details.Telegram is null && details.Matrix is null,
+        "Absent optional contacts were not preserved.");
+}
+Console.WriteLine("PASS self-service details with omitted or null contacts");
+first.SuccessBody = null;
+
 client.ServerBaseAddress = null;
 try
 {
@@ -84,10 +117,16 @@ sealed class LocalApiFixture : IAsyncDisposable
     private readonly Task _worker;
     private int _requestCount;
     private string? _lastRequestTarget;
+    private string? _successBody;
 
     public Uri BaseAddress { get; }
     public int RequestCount => Volatile.Read(ref _requestCount);
     public string? LastRequestTarget => Volatile.Read(ref _lastRequestTarget);
+    public string? SuccessBody
+    {
+        get => Volatile.Read(ref _successBody);
+        set => Volatile.Write(ref _successBody, value);
+    }
 
     public LocalApiFixture()
     {
@@ -120,7 +159,7 @@ sealed class LocalApiFixture : IAsyncDisposable
                 Interlocked.Increment(ref _requestCount);
                 var expected = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes("fixture:correct"));
                 var accepted = authorization == expected || authorization == "Bearer fixture-access";
-                var body = accepted ? "{\"token\":\"fixture-token\"}" : "{\"error\":\"Invalid credentials\"}";
+                var body = accepted ? SuccessBody ?? "{\"token\":\"fixture-token\"}" : "{\"error\":\"Invalid credentials\"}";
                 var bytes = Encoding.UTF8.GetBytes(body);
                 var status = accepted ? "200 OK" : "401 Unauthorized";
                 var headers = $"HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {bytes.Length}\r\nConnection: close\r\n\r\n";

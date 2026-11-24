@@ -308,10 +308,10 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
         }
     }
 
-    public async Task<RespUser> GetMyDetailsAsync(CancellationToken cancellationToken)
+    public async Task<MyDetails> GetMyDetailsAsync(CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/my/details");
-        return await SendAsync<RespUser>(request, cancellationToken);
+        return await SendAsync<MyDetails>(request, cancellationToken);
     }
 
     public async Task UpdateMyEmailAsync(string email, CancellationToken cancellationToken)
