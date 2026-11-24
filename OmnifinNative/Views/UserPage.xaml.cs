@@ -23,6 +23,9 @@ public sealed partial class UserPage : Page
 
     private async Task LoadUserDetailsAsync()
     {
+        _currentUser = null;
+        SaveContactButton.IsEnabled = false;
+        ContactMethodsPanel.IsEnabled = false;
         LoadingRing.IsActive = true;
         try
         {
@@ -30,6 +33,12 @@ public sealed partial class UserPage : Page
             if (_currentUser is not null)
             {
                 UserInfoText.Text = $"Username: {_currentUser.Username} | Email: {_currentUser.Email?.Value ?? "None"}";
+                LoadContactMethod(EmailContactCheck, _currentUser.Email);
+                LoadContactMethod(TelegramContactCheck, _currentUser.Telegram);
+                LoadContactMethod(DiscordContactCheck, _currentUser.Discord);
+                LoadContactMethod(MatrixContactCheck, _currentUser.Matrix);
+                ContactMethodsPanel.IsEnabled = true;
+                SaveContactButton.IsEnabled = true;
             }
         }
         catch (OmnifinApiException ex)
@@ -42,6 +51,12 @@ public sealed partial class UserPage : Page
         }
     }
 
+    private static void LoadContactMethod(CheckBox checkBox, MyDetailsContact? contact)
+    {
+        checkBox.IsChecked = contact?.Enabled == true;
+        checkBox.IsEnabled = !string.IsNullOrEmpty(contact?.Value);
+    }
+
     private void LogoutButton_Click(object sender, RoutedEventArgs e)
     {
         App.Auth.Logout();
@@ -50,7 +65,13 @@ public sealed partial class UserPage : Page
 
     private async void SaveContactButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_currentUser is null || !SaveContactButton.IsEnabled)
+        {
+            return;
+        }
+
         SaveContactButton.IsEnabled = false;
+        ContactMethodsPanel.IsEnabled = false;
         LoadingRing.IsActive = true;
 
         bool email = EmailContactCheck.IsChecked == true;
@@ -69,7 +90,8 @@ public sealed partial class UserPage : Page
         }
         finally
         {
-            SaveContactButton.IsEnabled = true;
+            SaveContactButton.IsEnabled = _currentUser is not null;
+            ContactMethodsPanel.IsEnabled = _currentUser is not null;
             LoadingRing.IsActive = false;
         }
     }
