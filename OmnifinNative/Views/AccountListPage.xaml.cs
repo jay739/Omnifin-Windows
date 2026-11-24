@@ -25,18 +25,18 @@ public sealed partial class AccountListPage : Page
     private async void RefreshButton_Click(object sender, RoutedEventArgs e) => await LoadUsersAsync();
 
     private async void EnableButton_Click(object sender, RoutedEventArgs e) =>
-        await RunOnSelectionAsync(ids => App.Api.EnableDisableUsersAsync(ids, enabled: true, CancellationToken.None));
+        await RunOnSelectionAsync("enable", ids => App.Api.EnableDisableUsersAsync(ids, enabled: true, CancellationToken.None));
 
     private async void DisableButton_Click(object sender, RoutedEventArgs e) =>
-        await RunOnSelectionAsync(ids => App.Api.EnableDisableUsersAsync(ids, enabled: false, CancellationToken.None));
+        await RunOnSelectionAsync("disable", ids => App.Api.EnableDisableUsersAsync(ids, enabled: false, CancellationToken.None));
 
     private async void ExtendButton_Click(object sender, RoutedEventArgs e) =>
-        await RunOnSelectionAsync(ids => App.Api.ExtendExpiryAsync(ids, months: 0, days: 30, CancellationToken.None));
+        await RunOnSelectionAsync("extend expiry for", ids => App.Api.ExtendExpiryAsync(ids, months: 0, days: 30, CancellationToken.None));
 
     private async void DeleteButton_Click(object sender, RoutedEventArgs e) =>
-        await RunOnSelectionAsync(ids => App.Api.DeleteUsersAsync(ids, CancellationToken.None));
+        await RunOnSelectionAsync("delete", ids => App.Api.DeleteUsersAsync(ids, CancellationToken.None));
 
-    private async Task RunOnSelectionAsync(Func<List<string>, Task> action)
+    private async Task RunOnSelectionAsync(string operation, Func<List<string>, Task> action)
     {
         var selectedIds = UsersListView.SelectedItems
             .Cast<RespUser>()
@@ -54,11 +54,9 @@ public sealed partial class AccountListPage : Page
             await action(selectedIds);
             await LoadUsersAsync();
         }
-        catch (OmnifinApiException)
+        catch (OmnifinApiException ex)
         {
-            // TODO: surface via an InfoBar once the error-shape handling
-            // is unified; the API's error responses aren't consistently
-            // shaped across handlers (see the API map notes).
+            ShowStatus($"Failed to {operation} selected users: {ex.Message}", isError: true);
         }
         finally
         {
