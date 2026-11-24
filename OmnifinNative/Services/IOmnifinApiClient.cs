@@ -70,7 +70,7 @@ public interface IOmnifinApiClient
 
     Task SaveConfigAsync(Dictionary<string, Dictionary<string, string>> config, CancellationToken cancellationToken);
 
-    Task<RespUser> GetMyDetailsAsync(CancellationToken cancellationToken);
+    Task<MyDetails> GetMyDetailsAsync(CancellationToken cancellationToken);
 
     Task UpdateMyEmailAsync(string email, CancellationToken cancellationToken);
 

@@ -8,7 +8,7 @@ namespace OmnifinNative.Views;
 
 public sealed partial class UserPage : Page
 {
-    private RespUser? _currentUser;
+    private MyDetails? _currentUser;
 
     public UserPage()
     {
@@ -29,16 +29,7 @@ public sealed partial class UserPage : Page
             _currentUser = await App.Api.GetMyDetailsAsync(CancellationToken.None);
             if (_currentUser is not null)
             {
-                UserInfoText.Text = $"Username: {_currentUser.Name} | Email: {_currentUser.Email ?? "None"}";
-
-                // Pre-check contact methods from API.
-                // In Go backend, standard users have attributes like email_contact, telegram_contact, etc.
-                // Let's see: standard user details API in Go returns UserDTO which has these settings.
-                // Since RespUser properties might not map telegram_contact directly, we can check 
-                // what the API returns in User details.
-                // Let's inspect the `/my/details` route to be sure what attributes it returns.
-                // If it is RespUser, we can fallback to checking if email is present.
-                // Let's query contact methods from the backend.
+                UserInfoText.Text = $"Username: {_currentUser.Username} | Email: {_currentUser.Email?.Value ?? "None"}";
             }
         }
         catch (OmnifinApiException ex)
