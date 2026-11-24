@@ -60,6 +60,11 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Run API contract checks
+        run: |
+          dotnet run --project .\OmnifinNative.ContractTests\OmnifinNative.ContractTests.csproj --configuration Release
+          dotnet format .\OmnifinNative.ContractTests\OmnifinNative.ContractTests.csproj --verify-no-changes --no-restore
+
       - name: Restore dependencies
         run: dotnet restore .\OmnifinNative\OmnifinNative.csproj -r win-x64
 

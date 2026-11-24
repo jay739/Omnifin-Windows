@@ -12,11 +12,7 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
 
     private readonly HttpClient _httpClient = new();
 
-    public Uri? ServerBaseAddress
-    {
-        get => _httpClient.BaseAddress;
-        set => _httpClient.BaseAddress = value;
-    }
+    public Uri? ServerBaseAddress { get; set; }
 
     // Access tokens live 20 minutes server-side; the caller is expected to
     // set this after login/refresh and re-set it after each refresh.
@@ -367,10 +363,16 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
         // /token/login and /token/refresh set their own Authorization header
         // (Basic or the refresh-token Bearer); everything else uses the
         // current access token.
-        if (_httpClient.BaseAddress is null)
+        var serverBaseAddress = ServerBaseAddress;
+        if (serverBaseAddress is null)
         {
             throw new OmnifinApiException("No server URL configured. Set the server URL on the login screen first.");
         }
+
+        // Resolve each request without changing HttpClient settings after first use.
+        request.RequestUri = request.RequestUri is null
+            ? serverBaseAddress
+            : new Uri(serverBaseAddress, request.RequestUri);
 
         if (request.Headers.Authorization is null && AccessToken is not null)
         {
