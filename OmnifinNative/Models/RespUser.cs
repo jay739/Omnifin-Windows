@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace OmnifinNative.Models;
@@ -7,8 +8,12 @@ namespace OmnifinNative.Models;
 // generator constructs objects via a parameterless constructor + property
 // assignment, which required/init members are incompatible with (see the
 // same gotcha hit on HomelabTray's ServiceStatus).
-public sealed class RespUser
+public sealed class RespUser : INotifyPropertyChanged
 {
+    private long? _watchTimeSeconds;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     [JsonPropertyName("id")]
     public string Id { get; set; } = string.Empty;
 
@@ -36,7 +41,19 @@ public sealed class RespUser
     // Populated client-side after joining against GET /users/watch-time,
     // which keys its response by username rather than user ID.
     [JsonIgnore]
-    public long WatchTimeSeconds { get; set; }
+    public long? WatchTimeSeconds
+    {
+        get => _watchTimeSeconds;
+        set
+        {
+            if (_watchTimeSeconds == value)
+            {
+                return;
+            }
+            _watchTimeSeconds = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(WatchTimeSeconds)));
+        }
+    }
 }
 
 public sealed class GetUsersResponse

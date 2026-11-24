@@ -6,10 +6,13 @@ public sealed class SecondsToDurationConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        var totalSeconds = (long)value;
+        if (value is not long totalSeconds)
+        {
+            return "Unavailable";
+        }
         if (totalSeconds <= 0)
         {
-            return "—";
+            return "0m";
         }
 
         var span = TimeSpan.FromSeconds(totalSeconds);

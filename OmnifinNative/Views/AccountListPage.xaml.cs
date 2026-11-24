@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -71,23 +72,31 @@ public sealed partial class AccountListPage : Page
         {
             var request = new UserSearchRequest { Limit = 200 };
             var users = await App.Api.SearchUsersAsync(request, CancellationToken.None) ?? [];
-            var watchTime = await App.Api.GetWatchTimeAsync(CancellationToken.None) ?? [];
-
-            foreach (var user in users)
-            {
-                if (user is not null && watchTime.TryGetValue(user.Name, out var seconds))
-                {
-                    user.WatchTimeSeconds = seconds;
-                }
-            }
-
             Users.Clear();
             foreach (var user in users)
             {
                 if (user is not null)
                 {
+                    user.WatchTimeSeconds = null;
                     Users.Add(user);
                 }
+            }
+
+            try
+            {
+                var watchTime = await App.Api.GetWatchTimeAsync(CancellationToken.None) ?? [];
+                foreach (var user in users)
+                {
+                    if (user is not null && watchTime.TryGetValue(user.Name, out var seconds))
+                    {
+                        user.WatchTimeSeconds = seconds;
+                    }
+                }
+            }
+            catch (Exception ex) when (ex is OmnifinApiException or HttpRequestException or OperationCanceledException
+                or JsonException or InvalidOperationException or FormatException)
+            {
+                ShowStatus("Accounts loaded. Watch-time statistics are unavailable. Use Refresh to try again.", isError: true);
             }
         }
         catch (Exception ex)

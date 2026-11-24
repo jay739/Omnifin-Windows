@@ -164,7 +164,7 @@
                         <!-- Watch Time -->
                         <TextBlock
                             Grid.Column="3"
-                            Text="{x:Bind WatchTimeSeconds, Converter={StaticResource SecondsToDurationConverter}}"
+                            Text="{x:Bind WatchTimeSeconds, Mode=OneWay, Converter={StaticResource SecondsToDurationConverter}}"
                             VerticalAlignment="Center"
                             FontSize="13" />
 
