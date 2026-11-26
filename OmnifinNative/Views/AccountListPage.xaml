@@ -32,7 +32,7 @@
         </StackPanel>
 
         <!-- Command Bar -->
-        <CommandBar Grid.Row="1" DefaultLabelPosition="Right" HorizontalAlignment="Left" Background="Transparent" IsOpen="False" Margin="0,0,0,8">
+        <CommandBar x:Name="AccountActionsBar" Grid.Row="1" DefaultLabelPosition="Right" HorizontalAlignment="Left" Background="Transparent" IsOpen="False" Margin="0,0,0,8">
             <AppBarButton Icon="Refresh" Label="Refresh" Click="RefreshButton_Click" />
             <AppBarButton Label="Create User">
                 <AppBarButton.Icon>
