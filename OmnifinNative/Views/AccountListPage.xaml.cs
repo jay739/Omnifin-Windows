@@ -10,6 +10,8 @@ namespace OmnifinNative;
 
 public sealed partial class AccountListPage : Page
 {
+    private bool _accountActionInProgress;
+
     public ObservableCollection<RespUser> Users { get; } = [];
 
     public AccountListPage()
@@ -23,7 +25,13 @@ public sealed partial class AccountListPage : Page
         await LoadUsersAsync();
     }
 
-    private async void RefreshButton_Click(object sender, RoutedEventArgs e) => await LoadUsersAsync();
+    private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_accountActionInProgress)
+        {
+            await LoadUsersAsync();
+        }
+    }
 
     private async void EnableButton_Click(object sender, RoutedEventArgs e) =>
         await RunOnSelectionAsync("enable", ids => App.Api.EnableDisableUsersAsync(ids, enabled: true, CancellationToken.None));
@@ -35,23 +43,63 @@ public sealed partial class AccountListPage : Page
         await RunOnSelectionAsync("extend expiry for", ids => App.Api.ExtendExpiryAsync(ids, months: 0, days: 30, CancellationToken.None));
 
     private async void DeleteButton_Click(object sender, RoutedEventArgs e) =>
-        await RunOnSelectionAsync("delete", ids => App.Api.DeleteUsersAsync(ids, CancellationToken.None));
+        await RunOnSelectionAsync("delete", ids => App.Api.DeleteUsersAsync(ids, CancellationToken.None), confirmDelete: true);
 
-    private async Task RunOnSelectionAsync(string operation, Func<List<string>, Task> action)
+    private void SetAccountActionBusy(bool busy)
     {
-        var selectedIds = UsersListView.SelectedItems
-            .Cast<RespUser>()
-            .Select(u => u.Id)
-            .ToList();
+        _accountActionInProgress = busy;
+        AccountActionsBar.IsEnabled = !busy;
+        UsersListView.IsEnabled = !busy;
+        ConfirmCreateButton.IsEnabled = !busy;
+        ConfirmEditButton.IsEnabled = !busy;
+        LoadingRing.IsActive = busy;
+    }
 
+    private async Task RunOnSelectionAsync(string operation, Func<List<string>, Task> action, bool confirmDelete = false)
+    {
+        if (_accountActionInProgress)
+        {
+            return;
+        }
+
+        var selectedUsers = UsersListView.SelectedItems
+            .Cast<RespUser>()
+            .Select(user => new { user.Id, user.Name })
+            .ToList();
+        var selectedIds = selectedUsers.Select(user => user.Id).ToList();
         if (selectedIds.Count == 0)
         {
             return;
         }
 
-        LoadingRing.IsActive = true;
+        SetAccountActionBusy(true);
         try
         {
+            if (confirmDelete)
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = selectedUsers.Count == 1 ? "Delete account?" : $"Delete {selectedUsers.Count} accounts?",
+                    Content = new ScrollViewer
+                    {
+                        MaxHeight = 260,
+                        Content = new TextBlock
+                        {
+                            Text = "The following accounts will be permanently deleted. This cannot be undone.\n\n"
+                                + string.Join("\n", selectedUsers.Select(user => user.Name)),
+                            TextWrapping = TextWrapping.Wrap,
+                        },
+                    },
+                    PrimaryButtonText = "Delete",
+                    CloseButtonText = "Cancel",
+                    DefaultButton = ContentDialogButton.Close,
+                    XamlRoot = XamlRoot,
+                };
+                if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+                {
+                    return;
+                }
+            }
             await action(selectedIds);
             await LoadUsersAsync();
         }
@@ -61,7 +109,7 @@ public sealed partial class AccountListPage : Page
         }
         finally
         {
-            LoadingRing.IsActive = false;
+            SetAccountActionBusy(false);
         }
     }
 
@@ -146,6 +194,11 @@ public sealed partial class AccountListPage : Page
 
     private async void ConfirmCreateUserButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_accountActionInProgress)
+        {
+            return;
+        }
+
         var username = NewUsernameBox.Text.Trim();
         var password = NewPasswordBox.Password;
         var email = NewEmailBox.Text.Trim();
@@ -173,8 +226,7 @@ public sealed partial class AccountListPage : Page
             Profile = profile
         };
 
-        ConfirmCreateButton.IsEnabled = false;
-        LoadingRing.IsActive = true;
+        SetAccountActionBusy(true);
 
         try
         {
@@ -197,8 +249,7 @@ public sealed partial class AccountListPage : Page
         }
         finally
         {
-            ConfirmCreateButton.IsEnabled = true;
-            LoadingRing.IsActive = false;
+            SetAccountActionBusy(false);
         }
     }
 
@@ -274,6 +325,11 @@ public sealed partial class AccountListPage : Page
 
     private async void ConfirmEditUserButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_accountActionInProgress)
+        {
+            return;
+        }
+
         var selectedUser = UsersListView.SelectedItem as RespUser;
         if (selectedUser is null) return;
 
@@ -282,8 +338,7 @@ public sealed partial class AccountListPage : Page
         var isAdmin = EditAdminCheckBox.IsChecked == true;
         var selectedProfile = EditProfileComboBox.SelectedItem as string ?? "none";
 
-        ConfirmEditButton.IsEnabled = false;
-        LoadingRing.IsActive = true;
+        SetAccountActionBusy(true);
 
         try
         {
@@ -329,8 +384,7 @@ public sealed partial class AccountListPage : Page
         }
         finally
         {
-            ConfirmEditButton.IsEnabled = true;
-            LoadingRing.IsActive = false;
+            SetAccountActionBusy(false);
         }
     }
 }
