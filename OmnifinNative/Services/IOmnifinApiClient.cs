@@ -1,8 +1,25 @@
+using System.Net;
 using OmnifinNative.Models;
 
 namespace OmnifinNative.Services;
 
-public sealed class OmnifinApiException(string message) : Exception(message);
+public enum OmnifinFailureKind
+{
+    Request,
+    Connection,
+    Timeout,
+    InvalidResponse,
+}
+
+public sealed class OmnifinApiException(
+    string message,
+    OmnifinFailureKind kind = OmnifinFailureKind.Request,
+    HttpStatusCode? statusCode = null,
+    Exception? innerException = null) : Exception(message, innerException)
+{
+    public OmnifinFailureKind Kind { get; } = kind;
+    public HttpStatusCode? StatusCode { get; } = statusCode;
+}
 
 public interface IOmnifinApiClient
 {

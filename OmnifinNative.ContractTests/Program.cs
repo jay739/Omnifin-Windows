@@ -6,6 +6,8 @@ using System.Text.Json;
 using OmnifinNative.Models;
 using OmnifinNative.Services;
 
+await OfflineRecoveryChecks.RunAsync();
+
 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
 await using var first = new LocalApiFixture();
 await using var second = new LocalApiFixture();

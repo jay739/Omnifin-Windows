@@ -14,11 +14,9 @@ public sealed partial class MainWindow : Window
         AppWindow.SetIcon("Assets/AppIcon.ico");
         AppWindow.Resize(new Windows.Graphics.SizeInt32(900, 600));
 
-        // Navigation happens from App.OnLaunched once the async session
-        // restore check (AuthService.TryRestoreSessionAsync) completes, so
-        // the app can land on AccountListPage directly instead of always
-        // flashing LoginPage first.
+        // Show the login page while a saved session is being restored so
+        // an unavailable server leaves a visible recovery path.
     }
 
-    public void Navigate(Type pageType) => RootFrame.Navigate(pageType);
+    public void Navigate(Type pageType, object? parameter = null) => RootFrame.Navigate(pageType, parameter);
 }

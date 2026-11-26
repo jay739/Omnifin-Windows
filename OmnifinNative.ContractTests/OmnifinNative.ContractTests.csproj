@@ -9,5 +9,6 @@
     <Compile Include="../OmnifinNative/Models/**/*.cs" Link="Models/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../OmnifinNative/Services/IOmnifinApiClient.cs" Link="Services/IOmnifinApiClient.cs" />
     <Compile Include="../OmnifinNative/Services/OmnifinApiClient.cs" Link="Services/OmnifinApiClient.cs" />
+    <Compile Include="../OmnifinNative/Services/AuthService.cs" Link="Services/AuthService.cs" />
   </ItemGroup>
 </Project>

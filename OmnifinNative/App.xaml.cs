@@ -31,12 +31,17 @@ public partial class App : Application
             ApiClient.ServerBaseAddress = savedServerUrl;
         }
 
-        var restored = savedServerUrl is not null && await Auth.TryRestoreSessionAsync(CancellationToken.None);
-        Type startPage = typeof(LoginPage);
-        if (restored)
+        var shouldRestore = savedServerUrl is not null && Auth.HasSavedSession;
+        ((MainWindow)_window).Navigate(typeof(LoginPage), shouldRestore);
+        if (!shouldRestore)
         {
-            startPage = Auth.IsAdmin ? typeof(OmnifinNative.Views.MainPage) : typeof(OmnifinNative.Views.UserPage);
+            return;
         }
+
+        var restored = await Auth.TryRestoreSessionAsync(CancellationToken.None);
+        var startPage = restored
+            ? (Auth.IsAdmin ? typeof(OmnifinNative.Views.MainPage) : typeof(OmnifinNative.Views.UserPage))
+            : typeof(LoginPage);
         ((MainWindow)_window).Navigate(startPage);
     }
 }
