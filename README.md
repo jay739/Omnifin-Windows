@@ -13,6 +13,14 @@ On first launch, the app asks for:
 
 These values are not hardcoded in the app source. The server URL is saved locally on the machine so the next launch can reuse it, and the login session is stored in Windows Credential Manager on that device only.
 
+## Connection recovery
+
+The login page remains visible while the app restores a saved session. Restoration waits up to 15 seconds. Temporary connection failures, timeouts, and server errors preserve the saved session so you can choose **Retry saved session** when Omnifin is available again. The retry uses the saved server URL.
+
+Choose **Forget server** to clear the saved server and session, then enter a server URL and sign in again. If Omnifin rejects the saved session, the app asks for a fresh login.
+
+Failed writes are not replayed automatically. A connection failure can happen after the server has applied a change, so check the result before repeating an announcement, account change, or backup action.
+
 ## Privacy and safe distribution
 
 This repo should not contain any of the following:

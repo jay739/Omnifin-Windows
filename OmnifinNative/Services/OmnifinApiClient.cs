@@ -10,7 +10,12 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    private readonly HttpClient _httpClient = new();
+    private readonly HttpClient _httpClient;
+
+    public OmnifinApiClient(HttpClient? httpClient = null)
+    {
+        _httpClient = httpClient ?? new HttpClient();
+    }
 
     public Uri? ServerBaseAddress { get; set; }
 
@@ -41,7 +46,16 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
         using var request = new HttpRequestMessage(HttpMethod.Get, "/token/refresh");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshToken);
 
-        return await SendAsync<TokenResponse>(request, cancellationToken);
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadline.CancelAfter(TimeSpan.FromSeconds(15));
+        try
+        {
+            return await SendAsync<TokenResponse>(request, deadline.Token);
+        }
+        catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new OmnifinApiException("Omnifin did not respond while restoring your saved session. Retry when the server is available, or sign in again.", OmnifinFailureKind.Timeout, innerException: ex);
+        }
     }
 
     public async Task<List<RespUser>> SearchUsersAsync(UserSearchRequest request, CancellationToken cancellationToken)
@@ -382,8 +396,15 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
     private async Task<T> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         using var response = await SendRawAsync(request, cancellationToken);
-        var result = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
-        return result ?? throw new OmnifinApiException("Server returned an empty response.");
+        try
+        {
+            var result = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
+            return result ?? throw new OmnifinApiException(RequestFailureMessage(request, "Omnifin returned an empty response."), OmnifinFailureKind.InvalidResponse);
+        }
+        catch (JsonException ex)
+        {
+            throw new OmnifinApiException(RequestFailureMessage(request, "Omnifin returned an unreadable response. Check that the app and server versions are compatible."), OmnifinFailureKind.InvalidResponse, innerException: ex);
+        }
     }
 
     private async Task<HttpResponseMessage> SendRawAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -419,14 +440,45 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
         }
 
-        var response = await _httpClient.SendAsync(request, cancellationToken);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new OmnifinApiException(RequestFailureMessage(request, "Could not reach Omnifin. Check the server URL, network connection, and whether Omnifin is running."), OmnifinFailureKind.Connection, innerException: ex);
+        }
+        catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new OmnifinApiException(RequestFailureMessage(request, "Omnifin did not respond before the request timed out. Check that the server is running and reachable."), OmnifinFailureKind.Timeout, innerException: ex);
+        }
+
         if (!response.IsSuccessStatusCode)
         {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            var error = ApiError.Parse(body);
-            throw new OmnifinApiException($"{(int)response.StatusCode}: {error.Message}");
+            using (response)
+            {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                string message;
+                try
+                {
+                    message = ApiError.Parse(body).Message;
+                }
+                catch (InvalidOperationException)
+                {
+                    message = response.ReasonPhrase ?? "The server rejected the request.";
+                }
+                throw new OmnifinApiException($"{(int)response.StatusCode}: {message}", statusCode: response.StatusCode);
+            }
         }
 
         return response;
+    }
+
+    private static string RequestFailureMessage(HttpRequestMessage request, string message)
+    {
+        return request.Method == HttpMethod.Get || request.Method == HttpMethod.Head
+            ? message + " Try again when the server is available."
+            : message + " The request may have completed. Check the result before trying again.";
     }
 }

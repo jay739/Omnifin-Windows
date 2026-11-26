@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" VerticalContentAlignment="Center">
         <!-- Centered Login Card -->
         <Border
             HorizontalAlignment="Center"
@@ -98,6 +98,11 @@
                     TextWrapping="Wrap"
                     Visibility="Collapsed" />
 
+                <StackPanel x:Name="RecoveryPanel" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                    <Button x:Name="RetrySessionButton" Content="Retry saved session" Click="RetrySessionButton_Click" />
+                    <Button x:Name="ForgetServerButton" Content="Forget server" Click="ForgetServerButton_Click" />
+                </StackPanel>
+
                 <!-- Sign In Button -->
                 <Button
                     x:Name="LoginButton"
@@ -121,5 +126,5 @@
                     HorizontalAlignment="Center" />
             </StackPanel>
         </Border>
-    </Grid>
+    </ScrollViewer>
 </Page>
