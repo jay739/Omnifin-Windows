@@ -29,7 +29,7 @@ public interface IOmnifinApiClient
 
     Task<TokenResponse> LoginUserAsync(string username, string password, CancellationToken cancellationToken);
 
-    Task<TokenResponse> RefreshAsync(string refreshToken, CancellationToken cancellationToken);
+    Task<TokenResponse> RefreshAsync(string refreshToken, CancellationToken cancellationToken, bool isAdmin = true);
 
     Task<List<RespUser>> SearchUsersAsync(UserSearchRequest request, CancellationToken cancellationToken);
 
