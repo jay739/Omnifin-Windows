@@ -24,6 +24,10 @@ public partial class App : Application
     {
         _window = new MainWindow();
         _window.Activate();
+        Auth.SessionExpired += () => _window.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (!Auth.IsAuthenticated) { ((MainWindow)_window).Navigate(typeof(LoginPage)); }
+        });
 
         var savedServerUrl = ServerSettings.LoadServerUrl();
         if (savedServerUrl is not null)

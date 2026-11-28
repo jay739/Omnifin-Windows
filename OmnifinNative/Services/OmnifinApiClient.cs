@@ -17,11 +17,117 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
         _httpClient = httpClient ?? new HttpClient();
     }
 
-    public Uri? ServerBaseAddress { get; set; }
+    private readonly object _sessionLock = new();
+    private Uri? _server;
+    private string? _access;
+    private string? _refresh;
+    private bool _isAdmin = true;
+    private long _epoch;
+    private Task? _renewal;
+    public event Action<TokenResponse>? TokensRenewed;
+    public event Action? SessionExpired;
 
-    // Access tokens live 20 minutes server-side; the caller is expected to
-    // set this after login/refresh and re-set it after each refresh.
-    public string? AccessToken { get; set; }
+    public Uri? ServerBaseAddress
+    {
+        get { lock (_sessionLock) { return _server; } }
+        set { lock (_sessionLock) { if (_server != value) { ClearSession(); _server = value; } } }
+    }
+
+    public string? AccessToken
+    {
+        get { lock (_sessionLock) { return _access; } }
+        set { lock (_sessionLock) { ClearSession(); _access = value; } }
+    }
+
+    public long SessionGeneration { get { lock (_sessionLock) { return _epoch; } } }
+
+    public bool TrySetSession(TokenResponse tokens, bool isAdmin, long expectedGeneration)
+    {
+        lock (_sessionLock)
+        {
+            if (_epoch != expectedGeneration) { return false; }
+            SetSession(tokens, isAdmin);
+            return true;
+        }
+    }
+
+    public void SetSession(TokenResponse tokens, bool isAdmin)
+    {
+        lock (_sessionLock)
+        {
+            ClearSession();
+            _access = tokens.Token;
+            _refresh = tokens.Refresh;
+            _isAdmin = isAdmin;
+        }
+    }
+
+    public void ClearSession()
+    {
+        lock (_sessionLock)
+        {
+            _epoch++;
+            _access = null;
+            _refresh = null;
+            _renewal = null;
+        }
+    }
+
+    private async Task RenewSessionAsync(string usedToken, long epoch, CancellationToken cancellationToken)
+    {
+        Task pending;
+        lock (_sessionLock)
+        {
+            if (_epoch != epoch) { throw new OmnifinApiException("The session changed. Sign in again.", statusCode: System.Net.HttpStatusCode.Unauthorized); }
+            if (_access != usedToken && _access is not null) { return; }
+            if (_refresh is null) { ExpireSession(epoch); throw new OmnifinApiException("Your session expired. Sign in again.", statusCode: System.Net.HttpStatusCode.Unauthorized); }
+            _renewal ??= RenewCoreAsync(epoch, _refresh, _isAdmin);
+            pending = _renewal;
+        }
+        await pending.WaitAsync(cancellationToken);
+    }
+
+    private async Task RenewCoreAsync(long epoch, string refresh, bool isAdmin)
+    {
+        // Defer execution until the shared task is installed under the session lock.
+        await Task.Yield();
+        try
+        {
+            Task<TokenResponse> renewal;
+            lock (_sessionLock)
+            {
+                if (_epoch != epoch) { throw new OmnifinApiException("The session changed. Sign in again.", statusCode: System.Net.HttpStatusCode.Unauthorized); }
+                renewal = RefreshAsync(refresh, CancellationToken.None, isAdmin);
+            }
+            var tokens = await renewal;
+            lock (_sessionLock)
+            {
+                if (_epoch != epoch) { throw new OmnifinApiException("The session changed. Sign in again.", statusCode: System.Net.HttpStatusCode.Unauthorized); }
+                _access = tokens.Token;
+                _refresh = tokens.Refresh ?? refresh;
+                TokensRenewed?.Invoke(tokens);
+            }
+        }
+        catch (OmnifinApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+        {
+            ExpireSession(epoch);
+            throw;
+        }
+        finally
+        {
+            lock (_sessionLock) { if (_epoch == epoch) { _renewal = null; } }
+        }
+    }
+
+    private void ExpireSession(long epoch)
+    {
+        lock (_sessionLock)
+        {
+            if (_epoch != epoch) { return; }
+            ClearSession();
+            SessionExpired?.Invoke();
+        }
+    }
 
     public async Task<TokenResponse> LoginAsync(string username, string password, CancellationToken cancellationToken)
     {
@@ -41,9 +147,9 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
         return await SendAsync<TokenResponse>(request, cancellationToken);
     }
 
-    public async Task<TokenResponse> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
+    public async Task<TokenResponse> RefreshAsync(string refreshToken, CancellationToken cancellationToken, bool isAdmin = true)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/token/refresh");
+        using var request = new HttpRequestMessage(HttpMethod.Get, isAdmin ? "/token/refresh" : "/my/token/refresh");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshToken);
 
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -435,11 +541,53 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
             request.RequestUri = new Uri(baseUri, requestUri.OriginalString.TrimStart('/'));
         }
 
-        if (request.Headers.Authorization is null && AccessToken is not null)
+        var sessionRequest = request.Headers.Authorization is null;
+        string? usedToken;
+        long epoch;
+        lock (_sessionLock)
         {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
+            usedToken = _access;
+            epoch = _epoch;
+            if (sessionRequest && usedToken is not null)
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", usedToken);
+            }
         }
+        // Freeze request content before sending, so an approved replay is identical.
+        var content = request.Content is null ? null : await request.Content.ReadAsByteArrayAsync(cancellationToken);
+        var response = await SendTransportAsync(request, cancellationToken);
+        if (sessionRequest && usedToken is not null && response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            var marked = response.Headers.TryGetValues("X-Omnifin-Session", out var values) && values.Contains("required");
+            var safeRead = request.Method == HttpMethod.Get || request.Method == HttpMethod.Head;
+            if (marked || safeRead)
+            {
+                response.Dispose();
+                await RenewSessionAsync(usedToken, epoch, cancellationToken);
+                using var retry = new HttpRequestMessage(request.Method, request.RequestUri) { Version = request.Version, VersionPolicy = request.VersionPolicy };
+                foreach (var header in request.Headers.Where(x => !x.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase)))
+                {
+                    retry.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                }
+                if (content is not null)
+                {
+                    retry.Content = new ByteArrayContent(content);
+                    foreach (var header in request.Content!.Headers) { retry.Content.Headers.TryAddWithoutValidation(header.Key, header.Value); }
+                }
+                lock (_sessionLock)
+                {
+                    if (_epoch != epoch) { throw new OmnifinApiException("The session changed. Sign in again.", statusCode: System.Net.HttpStatusCode.Unauthorized); }
+                    retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _access);
+                }
+                response = await SendTransportAsync(retry, cancellationToken);
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized) { ExpireSession(epoch); }
+            }
+        }
+        return await ValidateResponseAsync(response, cancellationToken);
+    }
 
+    private async Task<HttpResponseMessage> SendTransportAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
         HttpResponseMessage response;
         try
         {
@@ -454,6 +602,11 @@ public sealed class OmnifinApiClient : IOmnifinApiClient
             throw new OmnifinApiException(RequestFailureMessage(request, "Omnifin did not respond before the request timed out. Check that the server is running and reachable."), OmnifinFailureKind.Timeout, innerException: ex);
         }
 
+        return response;
+    }
+
+    private static async Task<HttpResponseMessage> ValidateResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
         if (!response.IsSuccessStatusCode)
         {
             using (response)

@@ -64,3 +64,7 @@ To run it, open the Actions tab in GitHub and start the workflow manually, or pu
 - The server URL is stored locally through Windows Credential Manager, not in source control.
 - Login tokens are also stored locally through Windows Credential Manager.
 - If you want to change the startup experience, keep the login page as the place where server URL and credentials are entered.
+
+### Session renewal
+
+Active sessions renew automatically when a read encounters an expired access token. Concurrent requests share one renewal, and each request is replayed at most once. Administrator and ordinary-user refresh routes remain separate. Writes are replayed only when the server marks the response as a rejection before the operation began (`X-Omnifin-Session: required`); an unmarked rejection or uncertain network failure is left for the user to check. Temporary renewal outages preserve saved credentials for retry. A rejected renewal returns to sign-in, and logout or a server change prevents a late renewal from restoring the old session.

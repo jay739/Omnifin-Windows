@@ -7,6 +7,7 @@ using OmnifinNative.Models;
 using OmnifinNative.Services;
 
 await OfflineRecoveryChecks.RunAsync();
+await SessionRenewalChecks.RunAsync();
 
 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
 await using var first = new LocalApiFixture();
@@ -64,6 +65,7 @@ Check(second.LastRequestTarget == "/absolute-task", "An absolute request URL was
 Console.WriteLine("PASS absolute request URLs are preserved");
 
 client.ServerBaseAddress = first.BaseAddress;
+client.AccessToken = "fixture-access";
 first.SuccessBody = """
     {
         "id": "fixture-user", "username": "Alice", "expiry": 1800000000,
